@@ -1,3 +1,5 @@
+// Name: Syed Talha Askari
+// Date: 25th March 2024
 const person_name = '\tSyed Talha Askari\n';
 
 console.log('Before Strip:');

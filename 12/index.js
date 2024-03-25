@@ -1,2 +1,4 @@
-var names = ['Asif', 'Waqas', 'Mohsin'];
-names.forEach(function (name) { return console.log("Hello ".concat(name)); });
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const names = ['Asif', 'Waqas', 'Mohsin'];
+names.forEach(name => console.log(`Hello ${name}`));

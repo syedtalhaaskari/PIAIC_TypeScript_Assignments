@@ -1,7 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 // Name: Syed Talha Askari
 // Date: 25th March 2024
-var person_name = '\tSyed Talha Askari\n';
+const person_name = '\tSyed Talha Askari\n';
 console.log('Before Strip:');
-console.log("|".concat(person_name, "|"));
+console.log(`|${person_name}|`);
 console.log('After Strip:');
-console.log("|".concat(person_name.trim(), "|"));
+console.log(`|${person_name.trim()}|`);

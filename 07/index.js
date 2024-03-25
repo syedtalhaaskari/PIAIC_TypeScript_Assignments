@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 console.log('Addition');
 console.log('1 + 7 = ' + (1 + 7));
 console.log('\nSubtraction');

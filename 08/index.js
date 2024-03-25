@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 console.log(1 + 7);
 console.log(9 - 1);
 console.log(2 * 4);

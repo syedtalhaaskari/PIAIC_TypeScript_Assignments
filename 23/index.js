@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-nocheck
 console.log('1 == "1"? I predict True');
 console.log(1 == "1");

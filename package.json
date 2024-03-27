@@ -1,7 +1,7 @@
 {
-  "name": "@syedtalhaaskari/sta-ts-calculator",
-  "version": "1.1.0",
-  "description": "A simple calculator programmed using typescript",
+  "name": "@syedtalhaaskari/sta-ts-number-guessing-game",
+  "version": "1.0.1",
+  "description": "A simple number guessing game range 1 to 5 programmed using typescript",
   "main": "index.js",
   "type": "module",
   "scripts": {

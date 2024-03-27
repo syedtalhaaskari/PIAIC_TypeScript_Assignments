@@ -1,0 +1,23 @@
+{
+  "name": "@syedtalhaaskari/sta-ts-calculator",
+  "version": "1.1.0",
+  "description": "A simple calculator programmed using typescript",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.16"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7"
+  },
+  "bin": "index.js",
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,204 +1,130 @@
 #!/usr/bin/env node
-import inquirer from "inquirer";
 import chalk from "chalk";
-let users = [
+import inquirer from "inquirer";
+let todos = [
     {
         id: 1,
-        pin: 1234,
-        name: "Admin",
-        amount: 100000
-    }
+        todoItem: "Breakfast",
+        isCompleted: true
+    },
+    {
+        id: 2,
+        todoItem: "Lunch",
+        isCompleted: false
+    },
+    {
+        id: 3,
+        todoItem: "Dinner",
+        isCompleted: false
+    },
 ];
-let currentUser;
-const pinValidator = {
-    validate: (value) => /^\d{4}$/.test(value) ? true : 'PIN must be of 4 digits',
-    filter: (value) => /^\d{4}$/.test(value) ? value : '',
-};
-const nameValidator = {
-    validate: (value) => value.length ? true : 'Name cannot be empty',
-    filter: (value) => value.length ? value : '',
-};
-const amountValidator = {
-    validate: (value) => /^\d+$/.test(value) && +value > 0 ? true : 'Amount must be greater than zero',
-    filter: (value) => /^\d+$/.test(value) && +value > 0 ? value : '',
-};
-const creditAmountValidator = (signedUser) => {
-    let amount = '0';
-    return {
-        validate: () => {
-            if (/^\d+$/.test(amount) && +amount > 0) {
-                if (signedUser.amount < +amount) {
-                    return 'Insufficient Balance';
-                }
-                return true;
-            }
-            return 'Amount must be greater than zero';
-        },
-        filter: (value) => {
-            amount = value;
-            if (/^\d+$/.test(value) && +value > 0) {
-                if (signedUser.amount < +value) {
-                    return '';
-                }
-                return value;
-            }
-            return '';
-        },
-    };
-};
-const getSignInDetails = async (signup, tryAgain) => {
-    console.clear();
-    if (signup) {
-        console.log(chalk.bgGreenBright("Sign Up Successful!."));
-    }
-    if (tryAgain) {
-        console.log(chalk.bgRedBright("Invalid PIN/ID! Try Again."));
-    }
-    let signInDetails = await inquirer.prompt([
-        {
-            name: "pin",
-            type: "password",
-            message: "Enter Your PIN: ",
-            ...pinValidator,
-        },
-        {
-            name: "name",
-            type: "input",
-            message: "Enter Your Name: ",
-            ...nameValidator,
-        },
-    ]);
-    let ind = users.findIndex(user => user.pin === +signInDetails.pin && user.name === signInDetails.name);
-    if (ind >= 0) {
-        currentUser = ind;
-        menu();
-    }
-    else {
-        getSignInDetails(false, true);
-    }
-};
-const getSignUpDetails = async () => {
-    const signUpDetails = await inquirer.prompt([
-        {
-            name: "pin",
-            type: "password",
-            message: "Enter Your PIN: ",
-            ...pinValidator,
-        },
-        {
-            name: "name",
-            type: "input",
-            message: "Enter Your Name: ",
-            ...nameValidator
-        },
-        {
-            name: "amount",
-            type: "number",
-            message: "Enter Your Deposit Amount: ",
-            ...amountValidator
-        },
-    ]);
-    if (signUpDetails.pin >= 0 && signUpDetails.amount >= 0 && !!signUpDetails.name) {
-        users.push({
-            id: users.length + 1,
-            pin: +signUpDetails.pin,
-            name: signUpDetails.name,
-            amount: +signUpDetails.amount
-        });
-        getSignInDetails(true);
-    }
-    else {
-        console.log(chalk.bgRedBright("Invalid Details! Try Again."));
-        getSignUpDetails();
-    }
-};
-const depositAmount = async () => {
-    const depositAmountDetails = await inquirer.prompt([
-        {
-            name: "amount",
-            type: "number",
-            message: "Enter Your Deposit Amount: ",
-            ...amountValidator
-        },
-    ]);
-    return depositAmountDetails.amount;
-};
-const creditAmount = async () => {
-    const creditAmountDetails = await inquirer.prompt([
-        {
-            name: "amount",
-            type: "number",
-            message: "Enter Your Credit Amount: ",
-            ...creditAmountValidator(users[currentUser])
-        },
-    ]);
-    return creditAmountDetails.amount;
-};
-const menu = async () => {
+const deleteAllTodos = async () => {
     console.clear();
     const { choice } = await inquirer.prompt([
         {
             name: "choice",
             type: "list",
-            message: chalk.bgWhiteBright.blackBright.bold("          <--- M E N U --->                 "),
+            message: "Are you sure you want to delete all todos? ",
             choices: [
                 {
-                    name: chalk.bgWhiteBright(" 1. Deposit                                 "),
-                    value: 1,
-                    key: 1,
+                    name: "Yes",
+                    value: true,
                 },
                 {
-                    name: chalk.bgWhiteBright(" 2. Credit                                  "),
-                    value: 2,
-                    key: 2,
+                    name: "No",
+                    value: false,
                 },
-                {
-                    name: chalk.bgWhiteBright(" 3. Check Amount                            "),
-                    value: 3,
-                    key: 3,
-                },
-                {
-                    name: chalk.bgWhiteBright(" 4. View Account Details                    "),
-                    value: 4,
-                    key: 4,
-                },
-                {
-                    name: chalk.bgWhiteBright(" 5. SignOut                                 "),
-                    value: 5,
-                    key: 5,
-                },
-            ]
+            ],
+            default: true
         },
     ]);
-    console.clear();
-    switch (choice) {
-        case 1:
-            users[currentUser].amount += await depositAmount();
-            showCurrentBalance();
-            break;
-        case 2:
-            users[currentUser].amount -= await creditAmount();
-            showCurrentBalance();
-            break;
-        case 3:
-            showCurrentBalance();
-            break;
-        case 4:
-            console.log(chalk.whiteBright(`Name: ${users[currentUser].name}`));
-            console.log(chalk.whiteBright(`Amount: ${users[currentUser].amount}`));
-            break;
-        case 5:
-            currentUser = -1;
-            homePage();
-            return;
-        default:
-            console.log(chalk.bgRedBright(`Invalid Option`));
+    if (choice) {
+        todos.length = 0;
     }
-    const { more } = await inquirer.prompt([
-        {
-            message: chalk.yellowBright("Would you like to make another transaction?"),
-            name: "more",
+    homePage();
+};
+const deleteTodo = async () => {
+    if (todos.length > 0) {
+        console.clear();
+        const { ind } = await inquirer.prompt({
+            name: "ind",
             type: "list",
+            message: "Select todo to delete: ",
+            choices: todos.map(({ todoItem, isCompleted, id }, ind) => ({
+                name: chalk[isCompleted ? "bgGreenBright" : "bgRedBright"](todoItem),
+                value: ind,
+                key: id,
+            })),
+            default: 0
+        });
+        if (ind < 0) {
+            console.log(chalk.bgRedBright("Invalid Todo Number"));
+            editTodo();
+            return;
+        }
+        todos.splice(ind, 1);
+        if (todos.length > 0) {
+            const { more } = await inquirer.prompt({
+                name: "more",
+                type: "list",
+                message: "Delete More? ",
+                choices: [
+                    {
+                        name: 'Yes',
+                        value: true,
+                    },
+                    {
+                        name: 'No',
+                        value: false,
+                    },
+                ],
+                default: true
+            });
+            more ? deleteTodo() : homePage();
+        }
+        else {
+            homePage();
+        }
+    }
+    else {
+        homePage();
+    }
+};
+const editTodo = async () => {
+    let { ind } = await inquirer.prompt([
+        {
+            name: "ind",
+            type: "list",
+            message: "Select Todo Item: ",
+            choices: todos.map(({ todoItem, isCompleted, id }, ind) => ({
+                name: chalk[isCompleted ? "bgGreenBright" : "bgRedBright"](todoItem),
+                value: ind,
+                key: id,
+            })),
+            default: 0,
+        },
+    ]);
+    let todoItem = await inquirer.prompt([
+        {
+            name: "todoItem",
+            type: "input",
+            message: "Enter Edited Todo Item: ",
+            default: todos[ind].todoItem,
+            validate: (input) => {
+                if (input.trim().length > 0)
+                    return true;
+                return "Todo Item cannot be Empty";
+            },
+            filter: (input) => {
+                if (input.trim().length > 0)
+                    return input.trim();
+                return "";
+            }
+        },
+        {
+            name: "isCompleted",
+            type: "list",
+            message: "Is it Completed? (Y/N): ",
             choices: [
                 {
                     name: 'Yes',
@@ -209,60 +135,118 @@ const menu = async () => {
                     value: false,
                 },
             ],
-            default: true
-        }
+            default: todos[ind].isCompleted,
+        },
     ]);
-    more ?
-        menu() :
-        exitApp();
+    if (ind < 0) {
+        console.log(chalk.bgRedBright("Invalid Todo Number"));
+        editTodo();
+        return;
+    }
+    else {
+        todos[ind].todoItem = todoItem.todoItem;
+        todos[ind].isCompleted = todoItem.isCompleted;
+        homePage();
+    }
 };
-const showCurrentBalance = () => console.log(chalk.whiteBright(`Your Current Amount is ${users[currentUser].amount}`));
-const exitApp = () => {
-    currentUser = -1;
-    console.log(chalk.bgBlueBright("Thanks for using our service. See you later"));
+const addTodo = async () => {
+    let todoInput = await inquirer.prompt([
+        {
+            name: "todoItem",
+            type: "input",
+            message: "Enter Todo Item: "
+        },
+        {
+            name: "isCompleted",
+            type: "list",
+            message: "Is it Completed? (Y/N): ",
+            choices: [
+                {
+                    name: 'Yes',
+                    value: true,
+                },
+                {
+                    name: 'No',
+                    value: false,
+                },
+            ],
+            default: false
+        },
+    ]);
+    todos.push({
+        id: todos.length === 0 ? 1 : todos[todos.length - 1].id + 1,
+        todoItem: todoInput.todoItem,
+        isCompleted: todoInput.isCompleted
+    });
+    homePage();
 };
-const homePage = () => {
-    console.clear();
-    chooseInputFromHomePage();
-};
-const chooseInputFromHomePage = async () => {
+const showMenu = async () => {
+    console.log();
     const { choice } = await inquirer.prompt([
         {
             name: "choice",
             type: "list",
-            message: chalk.bgWhiteBright.blackBright.bold("          <--- M E N U --->                 "),
+            message: chalk.bgWhiteBright("Select:               "),
             choices: [
                 {
-                    name: chalk.bgWhiteBright(" 1. SignIn                                  "),
+                    name: chalk.bgWhiteBright("1. Add Todo           "),
                     value: 1,
                     key: 1,
                 },
                 {
-                    name: chalk.bgWhiteBright(" 2. SignUp                                  "),
+                    name: chalk.bgWhiteBright("2. Edit Todo          "),
                     value: 2,
                     key: 2,
                 },
                 {
-                    name: chalk.bgWhiteBright(" 3. Exit                                    "),
+                    name: chalk.bgWhiteBright("3. Delete Todo        "),
                     value: 3,
                     key: 3,
                 },
-            ],
-        },
+                {
+                    name: chalk.bgWhiteBright("4. Delete All Todos   "),
+                    value: 4,
+                    key: 4,
+                },
+                {
+                    name: chalk.bgWhiteBright("5. Exit               "),
+                    value: 5,
+                    key: 5,
+                },
+            ]
+        }
     ]);
-    console.clear();
     switch (choice) {
         case 1:
-            getSignInDetails();
+            addTodo();
             break;
         case 2:
-            getSignUpDetails();
+            editTodo();
             break;
         case 3:
-            exitApp();
+            deleteTodo();
+            break;
+        case 4:
+            deleteAllTodos();
+            break;
+        case 5:
             break;
         default:
-            console.log(chalk.bgRedBright(`Invalid Option`));
+            homePage(true);
+            break;
     }
+};
+const homePage = (invalid) => {
+    console.clear();
+    if (invalid) {
+        console.log(chalk.bgRedBright(" Invalid Selection   "));
+    }
+    console.log(chalk.bgWhiteBright("     <--- TODO LIST --->     "));
+    todos.length <= 0 ?
+        console.log(chalk.bgWhiteBright(" No Todo Items To Display    "))
+        : todos.map(todo => {
+            console.log(chalk[todo.isCompleted ? "bgGreenBright" : "bgRedBright"](`${todo.id}. ${todo.todoItem}   `));
+        });
+    showMenu();
 };
 homePage();

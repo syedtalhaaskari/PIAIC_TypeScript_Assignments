@@ -1,264 +1,128 @@
 #!/usr/bin/env node
-
 import chalk from "chalk";
 import inquirer from "inquirer";
 
-type Todo = {
-    id: number;
-    todoItem: string;
-    isCompleted: boolean;
+type currenciesType = { [key: string]: { [key: string]: number } }
+
+const currencies: currenciesType = {
+    pkr: {
+        usd: 0.0035,
+        eur: 0.0032,
+        gbp: 0.0027,
+    },
+    usd: {
+        pkr: 285.40,
+        eur: 0.91,
+        gbp: 0.79,
+    },
+    eur: {
+        pkr: 312.11,
+        usd: 1.09,
+        gbp: 0.86,
+    },
+    gbp: {
+        pkr: 362.90,
+        usd: 1.27,
+        eur: 1.16,
+    },
 }
 
-let todos: Todo[] = [
-    {
-        id: 1,
-        todoItem: "Breakfast",
-        isCompleted: true
-    },
-    {
-        id: 2,
-        todoItem: "Lunch",
-        isCompleted: false
-    },
-    {
-        id: 3,
-        todoItem: "Dinner",
-        isCompleted: false
-    },
-];
+let userCurrency = "";
+let conversionCurrency = "";
+let amount = 0;
 
-const deleteAllTodos = async () => {
-    console.clear();
-    const { choice } = await inquirer.prompt([
+const tryAgain = async () => {
+    const userInput = await inquirer.prompt([
         {
             name: "choice",
             type: "list",
-            message: "Are you sure you want to delete all todos? ",
+            message: "Would you like to do another conversion?",
             choices: [
-                {
-                    name: "Yes",
-                    value: true,
-                },
-                {
-                    name: "No",
-                    value: false,
-                },
+                "Y",
+                "N",
             ],
-            default: true
-        },
-    ])
-    if (choice) {
-        todos.length = 0;
-    }
-    homePage();
-}
-
-const deleteTodo = async () => {
-    if (todos.length > 0) {
-        console.clear();
-        const { ind } = await inquirer.prompt({
-            name: "ind",
-            type: "list",
-            message: "Select todo to delete: ",
-            choices: todos.map(({ todoItem, isCompleted, id }, ind) => ({
-                name: chalk[isCompleted ? "bgGreenBright" : "bgRedBright"](todoItem),
-                value: ind,
-                key: id,
-            })),
-            default: 0
-        });
-        if (ind < 0) {
-            console.log(chalk.bgRedBright("Invalid Todo Number"));
-            editTodo();
-            return
+            default: "Y"
         }
-        todos.splice(ind, 1);
-
-        if (todos.length > 0) {
-            const { more } = await inquirer.prompt({
-                name: "more",
-                type: "list",
-                message: "Delete More? ",
-                choices: [
-                    {
-                        name: 'Yes',
-                        value: true,
-                    },
-                    {
-                        name: 'No',
-                        value: false,
-                    },
-                ],
-                default: true
-            });
-
-            more ? deleteTodo() : homePage();
-        } else {
-            homePage();
-        }
-    } else {
+    ]);
+    if (userInput.choice === "Y") {
+        userCurrency = "";
+        conversionCurrency = "";
+        amount = 0;
         homePage();
+    } else {
+        process.exit()
     }
+
 }
 
-const editTodo = async () => {
-    let { ind } = await inquirer.prompt([
+const showResult = () => {
+    console.clear()
+    console.log(chalk.bgBlueBright("     <--- Currency Converter --->     "));
+    console.log()
+    console.log(chalk.bgWhite(`    Your Currency: ${userCurrency}    `));
+    console.log(chalk.bgWhite(`    Conversion Currency: ${conversionCurrency}    `));
+    console.log(chalk.bgWhite(`    Your Amount: ${amount}    `));
+    const userKey = userCurrency.toLowerCase();
+    const convertKey = conversionCurrency.toLowerCase();
+    console.log(chalk.bgGreenBright(`    Converted Amount: ${userCurrency === conversionCurrency ? amount : amount * currencies[userKey][convertKey]}    `));
+    console.log()
+    tryAgain();
+}
+
+const takeAmount = async (clear: boolean) => {
+    console.clear()
+    if (clear) {
+        console.log(chalk.bgRedBright("Invalid Amount"));
+    }
+    console.log(chalk.bgBlueBright("     <--- Currency Converter --->     "));
+    const userInput = await inquirer.prompt([
         {
-            name: "ind",
-            type: "list",
-            message: "Select Todo Item: ",
-            choices: todos.map(({ todoItem, isCompleted, id }, ind) => ({
-                name: chalk[isCompleted ? "bgGreenBright" : "bgRedBright"](todoItem),
-                value: ind,
-                key: id,
-            })),
-            default: 0,
-        },
+            name: "amount",
+            type: "number",
+            message: "Enter Amount",
+        }
     ]);
-    let todoItem = await inquirer.prompt([
-        {
-            name: "todoItem",
-            type: "input",
-            message: "Enter Edited Todo Item: ",
-            default: todos[ind].todoItem,
-            validate: (input) => {
-                if (input.trim().length > 0) return true;
-                return "Todo Item cannot be Empty";
-            },
-            filter: (input) => {
-                if (input.trim().length > 0) return input.trim();
-                return "";
-            }
-        },
-        {
-            name: "isCompleted",
-            type: "list",
-            message: "Is it Completed? (Y/N): ",
-            choices: [
-                {
-                    name: 'Yes',
-                    value: true,
-                },
-                {
-                    name: 'No',
-                    value: false,
-                },
-            ],
-            default: todos[ind].isCompleted,
-        },
-    ]);
-    if (ind < 0) {
-        console.log(chalk.bgRedBright("Invalid Todo Number"));
-        editTodo();
+    if (!(userInput.amount >= 0)) {
+        takeAmount(true);
         return
-    } else {
-        todos[ind].todoItem = todoItem.todoItem;
-        todos[ind].isCompleted = todoItem.isCompleted;
-        homePage();
     }
-}
+    amount = userInput.amount;
+    showResult()
+};
 
-const addTodo = async () => {
-    let todoInput = await inquirer.prompt([
-        {
-            name: "todoItem",
-            type: "input",
-            message: "Enter Todo Item: "
-        },
-        {
-            name: "isCompleted",
-            type: "list",
-            message: "Is it Completed? (Y/N): ",
-            choices: [
-                {
-                    name: 'Yes',
-                    value: true,
-                },
-                {
-                    name: 'No',
-                    value: false,
-                },
-            ],
-            default: false
-        },
-    ])
-    todos.push({
-        id: todos.length === 0 ? 1 : todos[todos.length - 1].id + 1,
-        todoItem: todoInput.todoItem,
-        isCompleted: todoInput.isCompleted
-    })
-    homePage();
-}
-
-const showMenu = async () => {
-    console.log();
-    const { choice } = await inquirer.prompt([
+const takeCurrency = async (type: "userCurrency" | "conversionCurrency") => {
+    console.clear();
+    console.log(chalk.bgBlueBright("     <--- Currency Converter --->     "));
+    console.log()
+    const userInput = await inquirer.prompt([
         {
             name: "choice",
             type: "list",
-            message: chalk.bgWhiteBright("Select:               "),
+            message: `Select ${type === 'userCurrency' ? 'Your' : 'Conversion'} Currency`,
             choices: [
-                {
-                    name: chalk.bgWhiteBright("1. Add Todo           "),
-                    value: 1,
-                    key: 1,
-                },
-                {
-                    name: chalk.bgWhiteBright("2. Edit Todo          "),
-                    value: 2,
-                    key: 2,
-                },
-                {
-                    name: chalk.bgWhiteBright("3. Delete Todo        "),
-                    value: 3,
-                    key: 3,
-                },
-                {
-                    name: chalk.bgWhiteBright("4. Delete All Todos   "),
-                    value: 4,
-                    key: 4,
-                },
-                {
-                    name: chalk.bgWhiteBright("5. Exit               "),
-                    value: 5,
-                    key: 5,
-                },
+                "PKR - Pakistani Rupees",
+                "USD - American Dollar",
+                "EUR - Euro",
+                "GBP - Great Britain Pound",
+                "Exit",
             ]
         }
-    ])
-    switch (choice) {
-        case 1:
-            addTodo();
-            break;
-        case 2:
-            editTodo();
-            break;
-        case 3:
-            deleteTodo();
-            break;
-        case 4:
-            deleteAllTodos();
-            break;
-        case 5:
-            break;
-        default:
-            homePage(true);
-            break;
+    ]);
+    const choice = userInput.choice.slice(0, 3)
+    if (choice !== "Exi") {
+        if (type === "userCurrency") {
+            userCurrency = choice;
+            takeCurrency("conversionCurrency");
+        } else {
+            conversionCurrency = choice
+            takeAmount(false)
+        }
     }
-}
+};
 
-const homePage = (invalid?: boolean) => {
+const homePage = () => {
     console.clear();
-    if (invalid) {
-        console.log(chalk.bgRedBright(" Invalid Selection   "))
-    }
-    console.log(chalk.bgWhiteBright("     <--- TODO LIST --->     "))
-    todos.length <= 0 ?
-        console.log(chalk.bgWhiteBright(" No Todo Items To Display    "))
-        : todos.map(todo => {
-            console.log(chalk[todo.isCompleted ? "bgGreenBright" : "bgRedBright"](`${todo.id}. ${todo.todoItem}   `));
-        })
-    showMenu()
-}
+    takeCurrency("userCurrency");
+};
 
 homePage()
